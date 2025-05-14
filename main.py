@@ -7,20 +7,22 @@ from PyQt5.QtWidgets import(
 
 from PyQt5.QtGui import QFont ,  QPixmap , QColor , QPalette
 from PyQt5.QtCore import Qt
-
+from PyQt5.QtGui import QGuiApplication as qgi
 from editor import EditorUI
 import os
 class GameUI(QWidget):
-    def __init__(self):
+    def __init__(self,width,height):
         super().__init__()
         self.setWindowTitle("Problem Solving Game")
-        self.setMinimumSize(1440,810)
+        self.setMinimumSize(width,height)
+        print(f"height: {height} and width: {width}")
+        print(f"ration: {width/height} 16:9 = {16/9}")
         self.setStyleSheet("background-color:black; color: #4af8f4;")
 
         self.left_panel = self.create_left_panel("Questions")
         self.left_panel.setObjectName('panel')
-        self.left_panel.setMinimumWidth(550)
-        self.left_panel.setMaximumWidth(565)
+        self.left_panel.setMinimumWidth(470)
+        self.left_panel.setMaximumWidth(480)
         self.editor_panel = self.create_editor_panel("Code editor")
         self.editor_panel.setObjectName('panel')
         self.editor_panel.setMinimumWidth(500)
@@ -94,9 +96,14 @@ def load_stylesheet(filename:str):
 
 def main():
     app = QApplication(sys.argv)
+    screen = qgi.primaryScreen()
+    size = screen.availableGeometry()
+    #getting the motinor height and width
+    monitor_width = size.width();
+    monitor_height = size.height()  ;
     StyleSheet  = load_stylesheet('styles/style.css')
     app.setStyleSheet(StyleSheet)
-    window = GameUI()
+    window = GameUI(1080,720)
     window.show()
     sys.exit(app.exec_())
 

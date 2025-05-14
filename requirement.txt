@@ -1,0 +1,6 @@
+pyqt5
+qscintilla
+jedi
+flask
+google-genai
+python-dotenv
