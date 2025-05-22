@@ -2,5 +2,10 @@ __pycache__
 venv
 test.py
 mainRef.py
-vjudge.py
 .env
+input.txt
+output.txt
+script.py
+script.cpp
+script.c
+.temp

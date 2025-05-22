@@ -1,25 +1,45 @@
 from PyQt5.QtCore import Qt, QThread ,pyqtSignal
 from PyQt5.QtWidgets import QApplication, QWidget , QLabel , QVBoxLayout
-from ai import GenaiResponse
-import requests
+from ai import GeminiVerifyCode
+import subprocess
+import time
+import platform
+import tempfile
 import os
 import sys
-from dotenv import load_dotenv,dotenv_values
-class GeminiVerifyCode(QThread):
-    progress = pyqtSignal(str)
+
+
+class Vjudge(QWidget):
     def __init__(self,api_key:str,model:str,original_code:str):
         super().__init__()
-        self.prompt = """
-        You are a code security expert. Your task is to carefully review submitted code and identify any potentially harmful or malicious behavior. Look specifically for:
-        1.System-level access (e.g., reading/writing files, modifying system settings)
-        2.Network operations (e.g., socket usage, HTTP requests)
-        3.Execution of shell commands or subprocesses
-        4.Attempts to access or modify environment variables, sensitive directories, or user/system data
-        5.Any code that could break out of a sandboxed or restricted environment
-        if there is something unsafe just response:"unsafe " and then add those lines which are making the code unsafe and also comment about why it is unsafe in very short 2-3 line.else response: "safe".no introduction or extra words form ai are required or permitted.
-        """
-        self.code  = original_code;
-        self.ai = GenaiResponse(api_key,model,self.prompt)
+        self.gemini_verify = GeminiVerifyCode(api_key,model,original_code)
+        self.gemini_verify.progress.connect(self.setResponse)
+        self.gemini_verify.start()
+
+        self.warrning_widget = QLabel()
+        self.warrning_widget.setWordWrap(True)
+        self.warrning_widget.setStyleSheet(
+            """
+            background-color: black;
+            color: #4af8f4;
+            padding: 10px;
+            border: 2px solid #4af8f4;
+            border-radius: 5px;
+            """
+        )
+        self.warrning_widget.setAlignment(Qt.AlignCenter)
+
+        self.main_layout = QVBoxLayout()
+        self.main_layout.addWidget(self.warrning_widget)
+        self.setLayout(self.main_layout)
+        self.setStyleSheet(
+            """
+            background-color: black;
+            color: #4af8f4;
+            border: 1px solid #4af8f4;
+            """
+        )
+        self.setFixedSize(480,240)
         self.ALLOWED_LANGUAGES = ["python", "cpp", "c"]
         self.MAX_EXECUTION_TIME = 5  # Seconds
         self.MAX_MEMORY_MB = 128  # MB (Enforcing this in Python is tricky)
@@ -56,18 +76,30 @@ class GeminiVerifyCode(QThread):
         elif platform.system() == "Windows":
             env["PATH"] = "C:\\Windows\\System32;C:\\Windows"
         return env        
-    def compile_code(self,code:str, language:str, job_dir:str):
+    def compile_code(self,code:str, language:str):
         """Compiles code (C++, Java) within the job directory."""
+        ###############################################
+        # creating temporary directory for  code      #
+        # this will be deleted after the work is done #
+        ###############################################
+        temp_dir = ".temp"
+        if (not os.path.isdir(temp_dir)):
+            os.mkdir(temp_dir)
+        ########################################
+        # compilation process for c++ language #
+        ########################################
         if language == "cpp":
-            with open(os.path.join(job_dir, "source.cpp"), "w") as source_file:
-                source_file.write(code)
+            temp_file_name = "script.cpp"
+            temp = f"{temp_dir}/{temp_file_name}"
+            with open(temp, "w") as source_file:
+                source_file.write(str(code))
             executable_name = "a.out" if platform.system() == "Linux" else "a.exe"
-            executable_path = os.path.join(job_dir, executable_name)
-            compile_command = ["g++", "source.cpp", "-o", executable_path]
+            executable_path = executable_name
+            compile_command = ["g++", temp_file_name, "-o", executable_path]
             try:
                 process = subprocess.run(
                     compile_command,
-                    cwd=job_dir,  # Run in job dir
+                    cwd = temp_dir,
                     capture_output=True,
                     timeout=10,
                 )
@@ -76,19 +108,23 @@ class GeminiVerifyCode(QThread):
                 return executable_path, None
             except subprocess.TimeoutExpired:
                 return None, "Compilation timed out"
-
+        ##############################
+        # compilation for c language #
+        ##############################
         elif language == "c":
-            with open(os.path.join(job_dir, "source.c"), "w") as source_file:
-                source_file.write(code)
+            temp_file_name = "script.c"
+            temp = f"{temp_dir}/{temp_file_name}"
+            with open(temp, "w") as source_file:
+                source_file.write(str(code))
             executable_name = "a.out" if platform.system() == "Linux" else "a.exe"
-            executable_path = os.path.join(job_dir, executable_name)
+            executable_path = executable_name
 
-            compile_command = ["gcc", "source.c","-o",executable_path]
+            compile_command = ["gcc", temp_file_name ,"-o",executable_path]
 
             try:
                 process = subprocess.run(
                     compile_command,
-                    cwd=job_dir,  # Run in job dir
+                    cwd= temp_dir, 
                     capture_output=True,
                     timeout=10,
                 )
@@ -97,18 +133,28 @@ class GeminiVerifyCode(QThread):
                 return executable_path, None
             except subprocess.TimeoutExpired:
                 return None, "Compilation timed out"
+        ###################################
+        # compilation for python language #
+        ###################################
         elif language == "python":
-            with open(os.path.join(job_dir, "script.py"), "w") as script_file:
-                script_file.write(code)
-            return os.path.join(job_dir, "script.py"), None
+            file_path = os.path.join(os.getcwd(),"script.py")
+            with open(file_path, "w") as script_file:
+                # print(type(code))
+                script_file.write(str(code))
+            return file_path, None
         else:
             return None, "Unsupported language"
-    def execute_code(self,executable, language, input_data, job_dir):
+    def execute_code(self,executable, language, input_data):
         """Executes code within the job directory, with resource limits."""
-
-        env = create_restricted_environment()
+        ####################################################
+        # creating a restricted environment to run program #
+        ####################################################
+        env = self.create_restricted_environment()
         start_time = time.time()
         try:
+            ##########################################################
+            # executing 'c++' program executable to the restricted env #
+            ##########################################################
             if language == "cpp":
                 process = subprocess.run(
                     [executable],
@@ -116,8 +162,11 @@ class GeminiVerifyCode(QThread):
                     capture_output=True,
                     timeout=self.MAX_EXECUTION_TIME,
                     env=env,
-                    cwd=job_dir,  # Run in the job directory
                 )
+            ##########################################################
+            # executing 'c' program executable to the restricted env #
+            ##########################################################
+
             elif language == "c":
                 process = subprocess.run(
                     [executable],  # Assumes Main class
@@ -125,23 +174,25 @@ class GeminiVerifyCode(QThread):
                     capture_output=True,
                     timeout=self.MAX_EXECUTION_TIME,
                     env=env,
-                    cwd=job_dir,
                 )
+            ##########################################################
+            # running 'python' program to the restricted env #
+            ##########################################################
             elif language == "python":
+                python_path = sys.executable
                 process = subprocess.run(
-                    ["python3", executable],
+                    [python_path, executable],
                     input=input_data.encode("utf-8"),
                     capture_output=True,
                     timeout=self.MAX_EXECUTION_TIME,
                     env=env,
-                    cwd=job_dir,
                 )
             else:
                 return "Error: Unsupported language", 5
 
             end_time = time.time()
             execution_time = end_time - start_time
-            if execution_time > MAX_EXECUTION_TIME:
+            if execution_time > self.MAX_EXECUTION_TIME:
                 return "Time Limit Exceeded", 1
 
             if process.returncode != 0:
@@ -152,78 +203,10 @@ class GeminiVerifyCode(QThread):
             return "Time Limit Exceeded", 1
         except Exception as e:
             return f"Error: {str(e)}", 3
-
-
-    def chekc_network_connection(self):
-        try:
-            response = requests.get("https://google.com", timeout=5)
-            return True
-        except requests.ConnectionError:
-            return False  
-    def run(self):
-        if(self.chekc_network_connection()):
-            self.response = self.ai.response(self.code)
-            if("unsafe" in self.response.text):
-                text = self.response.text.split("unsafe")
-                self.progress.emit(f"<h3>unsafe</h3>{text[-1]}")
-        else:
-            self.progress.emit("No Internet Connection...")
-
-class VjudgeAi(QWidget):
-    def __init__(self,api_key:str,model:str,original_code:str):
-        super().__init__()
-        self.gemini_verify = GeminiVerifyCode(api_key,model,original_code)
-        self.gemini_verify.progress.connect(self.setResponse)
-        self.gemini_verify.start()
-
-        self.warrning_widget = QLabel()
-        self.warrning_widget.setWordWrap(True)
-        self.warrning_widget.setStyleSheet(
-            """
-            background-color: black;
-            color: #4af8f4;
-            padding: 10px;
-            border: 2px solid #4af8f4;
-            border-radius: 5px;
-            """
-        )
-        self.warrning_widget.setAlignment(Qt.AlignCenter)
-
-        self.main_layout = QVBoxLayout()
-        self.main_layout.addWidget(self.warrning_widget)
-        self.setLayout(self.main_layout)
-        self.setStyleSheet(
-            """
-            background-color: black;
-            color: #4af8f4;
-            border: 1px solid #4af8f4;
-            """
-        )
-        self.setFixedSize(480,240)
     def setResponse(self,text:str):
         self.warrning_widget.setText(text)
-
-    def read_env(self):
-        global API_KEY , AI_MODEL
-        load_dotenv()
-        API_KEY = os.getenv("API_KEY")
-        AI_MODEL= os.getenv("AI_MODEL")
-    def WarrningShow(self):
-        original_code = """
-    import os
+    def removeFileAndExecutable(self):
         
-    directory_path = "~"
-        
-    try:
-            os.rmdir(directory_path)
-            print(f"Directory '{directory_path}' removed successfully.")
-    except FileNotFoundError:
-            print(f"Directory '{directory_path}' not found.")
-    except OSError:
-            print(f"Directory '{directory_path}' is not empty.")
-        """
+        pass
 
-        self.read_env()
-        #getting the motinor height and width
-        window = VjudgeAi(API_KEY,AI_MODEL,original_code)
-        window.show()
+        

@@ -9,27 +9,39 @@ from PyQt5.QtGui import QFont ,  QPixmap , QColor , QPalette
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QGuiApplication as qgi
 from editor import EditorUI
+from vjudge import Vjudge
 import os
+import tempfile
+from dotenv import load_dotenv,dotenv_values
+
+load_dotenv()
+
 class GameUI(QWidget):
     def __init__(self,width,height):
         super().__init__()
         self.setWindowTitle("Problem Solving Game")
         self.setMinimumSize(width,height)
-        print(f"height: {height} and width: {width}")
-        print(f"ration: {width/height} 16:9 = {16/9}")
+        # print(f"height: {height} and width: {width}")
+        # print(f"ration: {width/height} 16:9 = {16/9}")
         self.setStyleSheet("background-color:black; color: #4af8f4;")
+
 
         self.left_panel = self.create_left_panel("Questions")
         self.left_panel.setObjectName('panel')
         self.left_panel.setMinimumWidth(470)
         self.left_panel.setMaximumWidth(480)
+
+        self.editor_widget = EditorUI()
+        self.editor_widget.submit.clicked.connect(self.run_code)
         self.editor_panel = self.create_editor_panel("Code editor")
         self.editor_panel.setObjectName('panel')
         self.editor_panel.setMinimumWidth(500)
+
         self.right_panel = self.create_right_panel("Right panel")
         self.right_panel.setObjectName('panel')
         self.right_panel.setMaximumWidth(350)
-        
+
+        self.judge = Vjudge(os.getenv("API_KEY"),os.getenv("AI_MODEL"),self.editor_widget.getCode)
 
         self.layout = QSplitter()
         self.layout.addWidget(self.left_panel)
@@ -39,8 +51,6 @@ class GameUI(QWidget):
         self.main_layout = QHBoxLayout()
         self.main_layout.addWidget(self.layout)
         self.setLayout(self.main_layout)
-
-
 
     def create_panel(self, title: str):
         panel = QWidget()
@@ -75,13 +85,26 @@ class GameUI(QWidget):
         return panel;
     def create_editor_panel(self,title:str):
         panel,layout = self.create_panel(title);
-        editor_widget = EditorUI()
-        editor_widget.setObjectName("editor_widget")
-        layout.addWidget(editor_widget,1000)
+        
+        self.editor_widget.setObjectName("editor_widget")
+        layout.addWidget(self.editor_widget,1000)
         return panel;
     def create_right_panel(self,title:str):
         panel,layout = self.create_panel(title);
         return panel;
+    def run_code(self,input_data = ""):
+        code = self.editor_widget.getCode()
+        language = self.editor_widget.getCodeLanguage()
+        executable , message = self.judge.compile_code(code,language)
+        print(message)
+        with open("input.txt",'r') as file:
+            input_data = file.read()
+        with open("output.txt","w") as output:
+            res,_ =  self.judge.execute_code(executable,language,input_data)
+            output.write(res)
+        
+        
+
         
 def resurce_path(relative_path:str):
     if getattr(sys,'frozen',False):
@@ -103,7 +126,7 @@ def main():
     monitor_height = size.height()  ;
     StyleSheet  = load_stylesheet('styles/style.css')
     app.setStyleSheet(StyleSheet)
-    window = GameUI(1080,720)
+    window = GameUI(1440,720)
     window.show()
     sys.exit(app.exec_())
 

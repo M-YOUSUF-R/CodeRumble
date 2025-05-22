@@ -53,7 +53,6 @@ class EditorUI(QWidget):
         super().__init__()
         self.editor = Editor()
         self.editor.setObjectName("editor_widget")
-
         self.python = QPushButton('python') 
         self.python.setObjectName("python_btn")
         self.python.setStyleSheet("""
@@ -62,6 +61,9 @@ class EditorUI(QWidget):
             border: 1px solid #4af8f4;
             border-radius: none;
         """)
+
+        self.language = ""
+
         self.python.setFixedWidth(50)
         self.python.setFixedHeight(25)
         self.python.clicked.connect(self.runPythonBtn)
@@ -99,7 +101,6 @@ class EditorUI(QWidget):
             border-radius: none;
         """)
         self.dummybtn = QLabel()
-
         self.submit.setFixedWidth(50)
         self.submit.setFixedHeight(22)
         self.submit.setObjectName('submit_btn')
@@ -122,7 +123,12 @@ class EditorUI(QWidget):
         self.editorLayout.addLayout(self.submitLayout)
 
         self.setLayout(self.editorLayout)
+    def getCode(self):
+        return self.editor.text()
+    def getCodeLanguage(self):
+        return self.language
     def runPythonBtn(self):
+        self.language = "python"
         self.python.setStyleSheet(self.python.styleSheet() + "background-color: #017682;")
         self.c.setStyleSheet("""
             background-color: none;
@@ -140,6 +146,7 @@ class EditorUI(QWidget):
         """)
         self.editor.setPythonLexerandAutoCompletion()
     def runCBtn(self):
+        self.language = "c"
         self.c.setStyleSheet(self.c.styleSheet() + "background-color: #017682;")
         self.python.setStyleSheet("""
             background-color: none;
@@ -157,6 +164,7 @@ class EditorUI(QWidget):
         """)
         self.editor.setCLexerandAutoCompletion()
     def runCxxBtn(self):
+        self.language = "cpp"
         self.cxx.setStyleSheet(self.cxx.styleSheet() + "background-color: #017682;")
         self.python.setStyleSheet("""
             background-color: none;
