@@ -52,9 +52,9 @@ class Vjudge(QWidget):
             os.environ.get("TEMP"), "vjudge_temp"
         )   # Use user's temp, create vjudge_temp
         #  Create base temp dir if it does not exist
-        if not os.path.exists(BASE_TEMP_DIR):
+        if not os.path.exists(self.BASE_TEMP_DIR):
             try:
-                os.makedirs(BASE_TEMP_DIR)
+                os.makedirs(self.BASE_TEMP_DIR)
             except OSError as e:
                 print(f"Error creating temp dir: {e}")
                 #  Consider logging and exiting.  If you can't create a temp dir,
@@ -137,11 +137,12 @@ class Vjudge(QWidget):
         # compilation for python language #
         ###################################
         elif language == "python":
-            file_path = os.path.join(os.getcwd(),"script.py")
-            with open(file_path, "w") as script_file:
+            temp_file_name = "script.py"
+            temp = f"{temp_dir}/{temp_file_name}"
+            with open(temp, "w") as script_file:
                 # print(type(code))
                 script_file.write(str(code))
-            return file_path, None
+            return temp, None
         else:
             return None, "Unsupported language"
     def execute_code(self,executable, language, input_data):
@@ -175,9 +176,9 @@ class Vjudge(QWidget):
                     timeout=self.MAX_EXECUTION_TIME,
                     env=env,
                 )
-            ##########################################################
+            ##################################################
             # running 'python' program to the restricted env #
-            ##########################################################
+            ##################################################
             elif language == "python":
                 python_path = sys.executable
                 process = subprocess.run(
