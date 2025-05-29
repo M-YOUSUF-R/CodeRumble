@@ -4,7 +4,7 @@
 
 **it is a competetive game as follow those task:**
 
-- given several problem set (ie. Math , Emplementation , Algorithm , Graph - related)
+- given several problem set (ie. Math , Implementation , Algorithm , Graph - related)
 - each porblem contain a story where a user need to solve the issue with programing and logic development skill
 - there is now 3 language support: python , c , c++
 ### this game is kinda inspired from "advent of code"
