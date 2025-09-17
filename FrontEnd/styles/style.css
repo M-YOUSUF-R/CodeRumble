@@ -1,10 +1,14 @@
 #game_ui{
-    background-color: black;
-    color: #4af8f4;
+    background-color: #1e293b;;
+    /* color: #4af8f4; */
 }
+
 #panel{
-    border: 1px solid #4af8f4;
+    /* border: 1px solid #4af8f4;
+    border-radius: 8px; */
+    background-color: #1e293b;
     border-radius: 8px;
+    margin: 5px;
 }
 
 #label{
@@ -15,13 +19,15 @@
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
 }
+
 #editor_widget{
     border: none;
 }
-#c_btn{
+
+/* #c_btn{
     background-color: #017682;
     margin: 0;
     padding: 0;
     border: 1px solid #4af8f4;
     border-radius: none;
-}
+} */
