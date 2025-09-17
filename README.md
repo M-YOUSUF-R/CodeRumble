@@ -20,10 +20,10 @@
 - [x] 3 language code compilation
 - [x] Executing the executable to the restricted env
 - [ ] Adding AI security to the backend
-- [ ] Question fetching to the UI from a database
-- [ ] Saving code feature
+- [x] Question fetching to the UI from a database
+- [x] Saving code feature
 - [ ] Using test case as input data set fetching from a database
-- [ ] Showing the output (Accepted / Wrong at 'x' input case...)
+- [x] Showing the output (Accepted / Wrong at 'x' input case...)
 - [ ] Giving hint option after a certain time using AI
 - [ ] Custom input data insert set
 - [ ] Output of custom input data showing (with expected output for that input by AI)
