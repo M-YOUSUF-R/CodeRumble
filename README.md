@@ -15,7 +15,8 @@
 
 ## TODO:
 - [x] Creating UI
-- [x] Developing the backend (Vjudge)
+- [x] Developing the backend
+- [x] Developing the Virtual judge
 - [x] Creating restricted environment to run program
 - [x] 3 language code compilation
 - [x] Executing the executable to the restricted env
