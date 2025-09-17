@@ -222,8 +222,8 @@ class Editor(QsciScintilla):
         self.setMarginWidth(0, '00000')
 
         # Setting the color of the margin.
-        self.setMarginsForegroundColor(QColor("#5C6370"))
-        self.setMarginsBackgroundColor(QColor("#1e293b"))
+        self.setMarginsForegroundColor(QColor("#FFFFFF"))
+        self.setMarginsBackgroundColor(QColor("#242d42"))
 
         # Setting the wrap mode to wrap by word.
         self.setWrapMode(QsciScintilla.WrapWord)

@@ -257,10 +257,15 @@ class MainUi(QWidget):
                 output.write(res)
 
             # Check if output matches expected result
-            with open("output.txt", 'r') as f:
-                actual_output = f.read().strip()
+            # with open("output.txt", 'r') as f:
+            #     actual_output = f.read().strip()
+            actual_output = res
 
-            expected_output = self.output_widget.toPlainText().strip()
+            expected_output = self.output_widget.toPlainText()
+            with open("expected_output.txt",'w') as exout:
+                exout.write(expected_output)
+            
+
 
             if actual_output == expected_output:
                 self.result_widget.setText("Accepted")
@@ -276,7 +281,7 @@ class MainUi(QWidget):
                     }
                 """)
             else:
-                self.result_widget.setText(f"Wrong Answer. Got: {actual_output}")
+                self.result_widget.setText(f"Wrong Answer. Got:\n{actual_output}")
                 self.result_widget.setStyleSheet("""
                     QLineEdit {
                         background-color: #7c2d12;
