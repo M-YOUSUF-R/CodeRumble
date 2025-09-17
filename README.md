@@ -26,6 +26,6 @@
 - [ ] Using test case as input data set fetching from a database
 - [x] Showing the output (Accepted / Wrong at 'x' input case...)
 - [ ] Giving hint option after a certain time using AI
-- [ ] Custom input data insert set
-- [ ] Output of custom input data showing (with expected output for that input by AI)
+- [-] Custom input data insert set
+- [-] Output of custom input data showing (with expected output for that input by AI)
 
