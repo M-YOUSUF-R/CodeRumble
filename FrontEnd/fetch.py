@@ -5,7 +5,7 @@ load_dotenv()
 BASE_URL = os.getenv("BACKEND_URL")
 #f'{os.getenv("BACKEND_URL")}/api/questions/?category=math'
 def fetchQuestions (category)-> list:
-    url = f'{BASE_URL}/api/questions/?category={category}'
+    url = f'{BASE_URL}/api/questions/{category}'
     data = requests.get(url)
     print(data)
     # print(data.json())
