@@ -7,7 +7,7 @@ from .serialize import QuestionSearlizer
 
 # Create your views here.
 @api_view(['GET'])
-def getQuestions(request,category):
+def getQuestions(request,category=None):
     # print(dict(request.GET))
     # category = request.GET.get('category')
     if category:
