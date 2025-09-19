@@ -10,7 +10,7 @@ from .serialize import QuestionSearlizer
 def getQuestions(request):
     category = request.GET.get('category')
     if category:
-        questions = Question.objects.filter(category=category)
+        questions = Question.objects.filter(q_category=category)
         print(questions)
     else:
         questions = Question.objects.all()
