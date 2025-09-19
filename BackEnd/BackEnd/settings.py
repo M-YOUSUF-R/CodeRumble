@@ -30,7 +30,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = [".alwaysdata.net"]
 
-
+APPEND_SLASH=True
 # Application definition
 
 INSTALLED_APPS = [
