@@ -7,11 +7,11 @@ class Question(models.Model):
         ('dsa', 'DSA'),
         ('dp', 'DP'),
     ]
-    category = models.CharField(max_length=10, choices=CATEGORY_CHOICES)
-    title = models.CharField(default='question title')
+    q_category = models.CharField(max_length=10)
+    q_title = models.CharField(max_length=200,default='question title')
     question = models.TextField()
-    testcase = models.TextField()
-    answer = models.TextField()
+    q_testcase = models.TextField()
+    q_answer = models.TextField()
 
     def __str__(self):
         return f"{self.category} - {self.question[:30]}"
