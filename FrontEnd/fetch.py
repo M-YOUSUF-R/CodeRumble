@@ -7,8 +7,8 @@ BASE_URL = os.getenv("BACKEND_URL")
 def fetchQuestions (category)-> list:
     url = f'{BASE_URL}/api/questions/?category={category}'
     data = requests.get(url)
+    print(data)
     # print(data.json())
-    # print(data.json())
-    return data.json()
+    # return data.json()
 
-# print(fetchQuestions('math'))
+print(fetchQuestions('math'))
